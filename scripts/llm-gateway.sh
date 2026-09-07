@@ -194,6 +194,13 @@ case "${GATEWAY:-direct}" in
     export ANTHROPIC_DEFAULT_SONNET_MODEL="${OPENROUTER_MODEL_SONNET:-anthropic/claude-sonnet-5}"
     export ANTHROPIC_DEFAULT_HAIKU_MODEL="${OPENROUTER_MODEL_HAIKU:-anthropic/claude-haiku-4.5}"
     MODEL="$ANTHROPIC_DEFAULT_OPUS_MODEL"
+    # Cap output tokens to avoid 402s on free-tier OpenRouter accounts.
+    # Claude Code defaults to 32000 max_tokens; free OpenRouter keys cap at ~1600.
+    # Override per fork with repo variable OPENROUTER_MAX_TOKENS (or set to "none"
+    # to skip the cap for paid accounts).
+    if [ -z "${OPENROUTER_MAX_TOKENS:-}" ] || [ "${OPENROUTER_MAX_TOKENS}" != "none" ]; then
+      export ANTHROPIC_MAX_TOKENS="${OPENROUTER_MAX_TOKENS:-1600}"
+    fi
     # App attribution: HTTP-Referer + X-Title make aeon's OpenRouter traffic show
     # up on openrouter.ai's public app leaderboard. Claude Code forwards
     # ANTHROPIC_CUSTOM_HEADERS (one "Name: Value" per line) to the upstream even on
