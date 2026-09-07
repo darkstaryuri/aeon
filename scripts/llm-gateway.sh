@@ -151,7 +151,21 @@ if [ -z "${GATEWAY:-}" ] || [ "${GATEWAY}" = "auto" ]; then
   [ -z "$AEON_CANDIDATES" ] && AEON_CANDIDATES="direct"
   # List mode (RUN, not sourced): print the cascade order and stop. aeon.yml's
   # Run step uses this to fail over from one provider to the next on any failure.
-  if [ -n "${AEON_LIST_CANDIDATES:-}" ]; then printf '%s\n' "$AEON_CANDIDATES"; exit 0; fi
+  # When AEON_FAILOVER=1, filter out providers recently marked as failed
+  # (within AEON_FAILOVER_COOLDOWN, default 30 min) so the cascade can skip
+  # a rate-limited provider and try the next one immediately, without waiting
+  # for the full run to fail. The failover state is tracked in
+  # $AEON_FAILOVER_STATE (default /tmp/aeon-failover.json).
+  if [ -n "${AEON_LIST_CANDIDATES:-}" ]; then
+    if [ "${AEON_FAILOVER:-0}" = "1" ] && [ -x "${AEON_HOME:-$GITHUB_WORKSPACE}/scripts/provider-failover.sh" ]; then
+      AEON_CANDIDATES=$("${AEON_HOME:-$GITHUB_WORKSPACE}/scripts/provider-failover.sh" list-healthy 2>/dev/null || echo "$AEON_CANDIDATES")
+    fi
+    printf '%s\n' "$AEON_CANDIDATES"
+    # Mark the first candidate as the primary for this run.
+    # On failure, the cascade marks it via provider-failover.sh mark-failed,
+    # then the next iteration will skip it.
+    exit 0
+  fi
   # Single-shot: set up the first present provider (preserves prior behavior).
   GATEWAY="${AEON_CANDIDATES%% *}"
   echo "::notice::gateway=auto resolved to '${GATEWAY}'"
