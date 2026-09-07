@@ -15,5 +15,8 @@
   "dependencies": {
     "tsx": "^4.23.12",
     "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1"
   }
 }

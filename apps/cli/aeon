@@ -14,22 +14,34 @@ done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"   # apps/cli
 REPO_ROOT="$(cd "$DIR/../.." && pwd)"
 
+# On Windows (MSYS), convert bash-style paths to native Windows paths so
+# Node.js / tsx can resolve them correctly (tsx mangles /d/... → D:\d\...).
+if command -v cygpath >/dev/null 2>&1; then
+    WIN_DIR="$(cygpath -w "$DIR")"
+    WIN_REPO_ROOT="$(cygpath -w "$REPO_ROOT")"
+    AEON_DIR="$WIN_DIR"
+    AEON_ROOT="$WIN_REPO_ROOT"
+else
+    AEON_DIR="$DIR"
+    AEON_ROOT="$REPO_ROOT"
+fi
+
 # The shared lib computes REPO_ROOT from cwd (it's built for the dashboard, which
 # runs from apps/dashboard). Pin it to this checkout so the CLI is cwd-independent
 # — but honour an operator-set AEON_REPO_ROOT so `aeon` can target another Aeon repo.
-export AEON_REPO_ROOT="${AEON_REPO_ROOT:-$REPO_ROOT}"
+export AEON_REPO_ROOT="${AEON_REPO_ROOT:-$AEON_ROOT}"
 
-TSX="$DIR/node_modules/.bin/tsx"
+TSX="$AEON_DIR/node_modules/.bin/tsx"
 
 # The CLI carries its own minimal runtime (tsx + yaml, ~12MB) so it works without
 # installing the full dashboard app. First run populates it.
 if [ ! -x "$TSX" ]; then
   echo "Installing Aeon CLI runtime (tsx, yaml — one-time, ~12MB)…" >&2
-  (cd "$DIR" && npm install) || { echo "npm install failed in $DIR" >&2; exit 1; }
+  (cd "$AEON_DIR" && npm install) || { echo "npm install failed in $AEON_DIR" >&2; exit 1; }
 fi
 
 # Point tsx at our tsconfig so the `yaml` path-mapping (which lets the shared
 # dashboard lib resolve yaml from the CLI's own node_modules) is applied.
-export TSX_TSCONFIG_PATH="$DIR/tsconfig.json"
+export TSX_TSCONFIG_PATH="$AEON_DIR/tsconfig.json"
 
-exec "$TSX" "$DIR/src/index.ts" "$@"
+exec "$TSX" "$AEON_DIR/src/index.ts" "$@"

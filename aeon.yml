@@ -200,8 +200,7 @@ chains:
     max_dispatches: 2
     steps:
       - { skill: feature, var: "$chain_target" }
-      - { skill: pr-review, var: "$feature_pr", consume: [feature] }
-
+      - { skill: pr-review, var: "$feature_pr", consume: [ feature ] }
   # routine:
   #   schedule: "0 7 * * *"
   #   on_error: fail-fast
@@ -209,16 +208,16 @@ chains:
   #     - parallel: [token-movers, hn-digest, issue-triage, github-trending]
   #     - skill: routine, consume: [token-movers, hn-digest, issue-triage, github-trending]
 
-# Default model for all skills. Override per-run via workflow_dispatch.
-# Options: claude-sonnet-5, claude-opus-4-8, claude-haiku-4-5-20251001
-# (Grok harness model: grok-4.5, the flagship reasoning model and grok's current
-#  default, run with --no-subagents in CI. It's the only id the grok CLI accepts on an
-#  X-account login, and it's the gateway default too. The older coding ids
-#  (grok-build-0.1, grok-composer-2.5-fast, grok-4.3) are gateway-only, reachable via
-#  XAI_API_KEY + the GROK_MODEL var.)
-# The non-claude harnesses use their OWN model ids (codex openai/*, kimi moonshotai/*,
-# vibe mistralai/*, pi deepseek/*) — surfaced in the dashboard picker per harness; see
-# docs/harnesses.md. The value below only applies to the claude/grok harnesses.
+  # Default model for all skills. Override per-run via workflow_dispatch.
+  # Options: claude-sonnet-5, claude-opus-4-8, claude-haiku-4-5-20251001
+  # (Grok harness model: grok-4.5, the flagship reasoning model and grok's current
+  #  default, run with --no-subagents in CI. It's the only id the grok CLI accepts on an
+  #  X-account login, and it's the gateway default too. The older coding ids
+  #  (grok-build-0.1, grok-composer-2.5-fast, grok-4.3) are gateway-only, reachable via
+  #  XAI_API_KEY + the GROK_MODEL var.)
+  # The non-claude harnesses use their OWN model ids (codex openai/*, kimi moonshotai/*,
+  # vibe mistralai/*, pi deepseek/*) — surfaced in the dashboard picker per harness; see
+  # docs/harnesses.md. The value below only applies to the claude/grok harnesses.
 model: claude-sonnet-5
 
 # Agent harness — which coding-agent CLI runs your skills.
